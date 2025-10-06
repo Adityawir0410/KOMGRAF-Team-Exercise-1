@@ -1,40 +1,39 @@
-<!-- Langkah1 -->
+<!-- langkah 2 -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <title>Textured Room - Step 1</title>
+    <meta charset="utf-8">
+    <title>Textured Room - Step 2 (OrbitControls)</title>
     <style>
-        /* Pastikan tampilan penuh layar dan latar belakang gelap */
-        html, body { 
-            margin: 0; 
-            height: 100%; 
-            overflow: hidden; 
-            background: #111; 
-        }
-        canvas { 
-            display: block; 
+        html, body { margin: 0; height: 100%; overflow: hidden; background: #111; }
+        canvas { display: block; }
+        .hint {
+            position: absolute; top: 10px; left: 50%;
+            transform: translateX(-50%);
+            color: #ddd; font-family: system-ui, sans-serif; font-size: 14px;
+            text-align: center;
+            background: rgba(0,0,0,0.35); padding: 6px 10px;
+            border-radius: 8px; user-select: none;
         }
     </style>
 </head>
 <body>
+    <div class="hint">Drag = rotate | Scroll = zoom | Right-drag = pan <br> R = reset camera</div>
+
     <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/controls/OrbitControls.js"></script>
+
     <script>
         //=== 1. Scene ===
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x222222); // warna latar belakang
+        scene.background = new THREE.Color(0x222222);
 
         //=== 2. Camera ===
-        // Gunakan kamera perspektif (seperti mata manusia)
-        const camera = new THREE.PerspectiveCamera(
-            60, // Field of View
-            window.innerWidth / window.innerHeight, // Rasio aspek layar
-            0.1, // Jarak terdekat
-            100 // Jarak terjauh
-        );
-        // Posisi kamera sedikit di atas dan ke depan dari titik asal
-        camera.position.set(0, 1.5, 3);
-        camera.lookAt(0, 1, 0); // Fokus ke titik tengah (tinggi 1 meter)
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        const defaultPos = new THREE.Vector3(0, 1.5, 3); // Posisi default untuk reset
+        camera.position.copy(defaultPos);
+        camera.lookAt(0, 1, 0);
 
         //=== 3. Renderer ===
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -42,18 +41,36 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        //=== 4. Render Loop ===
+        //=== 4. OrbitControls ===
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // Gerakan halus
+        controls.target.set(0, 1, 0); // Titik orbit di tengah ruang
+        controls.minDistance = 0.5; // Batas zoom minimum
+        controls.maxDistance = 12; // Batas zoom maksimum
+
+        //=== 5. Render Loop (jangan lupa update controls) ===
         function animate() {
             requestAnimationFrame(animate);
+            controls.update(); // Wajib jika enableDamping = true
             renderer.render(scene, camera);
         }
         animate();
 
-        //=== 5. Resize Responsif ===
+        //=== 6. Resize Responsif ===
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        //=== 7. Reset Kamera (R) ===
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                camera.position.copy(defaultPos);
+                controls.target.set(0, 1, 0);
+                camera.lookAt(0, 1, 0);
+                controls.update();
+            }
         });
     </script>
 </body>
